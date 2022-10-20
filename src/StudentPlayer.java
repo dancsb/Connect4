@@ -1,6 +1,3 @@
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
 public class StudentPlayer extends Player{
     public StudentPlayer(int playerIndex, int[] boardSize, int nToConnect) {
         super(playerIndex, boardSize, nToConnect);
@@ -9,39 +6,34 @@ public class StudentPlayer extends Player{
     private final static int MAX_DEPTH = 10;
     private int result = 0;
 
-    private boolean is3InCol(Board board) {
-        int nInACol = 0;
-
-        int startRow = max(0, board.getLastPlayerRow() - 3 + 1);
-        int endRow = min(boardSize[0], board.getLastPlayerRow() + 3);
-
-        for (int r = startRow; r < endRow; r++) {
-            if (board.getState()[r][board.getLastPlayerColumn()] == board.getLastPlayerIndex()) {
-                nInACol++;
-                if (nInACol == 3) {
-                    if ((board.getLastPlayerRow() - 1 >= 0) && board.getState()[board.getLastPlayerRow() - 1][board.getLastPlayerColumn()] != 1 && board.getState()[board.getLastPlayerRow() - 1][board.getLastPlayerColumn()] != 2)
-                        return true;
-                }
-            } else
-                nInACol = 0;
+    private boolean is3inCol(Board board) {
+        if (board.getLastPlayerRow() <= 3 && board.getLastPlayerRow() > 0) {
+            for (int i = board.getLastPlayerRow(); i < board.getLastPlayerRow() + 3; i++)
+                if (board.getState()[i][board.getLastPlayerColumn()] != board.getLastPlayerIndex())
+                    return false;
+            return true;
         }
         return false;
     }
 
     private int score(Board board) {
-        if (board.getWinner() == 2) return 100000;
-        if (board.getWinner() == 1) return -100000;
+        if (board.getWinner() == 2) return 10000000;
+        if (board.getWinner() == 1) return -10000000;
+        if (board.getWinner() == 0) return 0;
+        if (is3inCol(board)) {
+            if(board.getLastPlayerIndex() == 2) return 50;
+            if(board.getLastPlayerIndex() == 1) return -50;
+        }
+        if (board.getLastPlayerColumn() == 3) {
+            if(board.getLastPlayerIndex() == 2) return 10;
+            if(board.getLastPlayerIndex() == 1) return -10;
+        }
         return 0;
     }
 
     private int minimax(Board board, int depth, int alpha, int beta, boolean ai) {
-        if (board.getLastPlayerIndex() == 2 && board.getLastPlayerColumn() == 3) return 60;
-        //if (board.getLastPlayerIndex() == 1 && board.getLastPlayerColumn() == 3) return -60;
-        if (board.getLastPlayerIndex() == 2 && is3InCol(board)) return 50 * depth;
-        //if (board.getLastPlayerIndex() == 1 && is3InCol(board)) return -50 * depth;
-        if (depth == 0 || board.gameEnded()){
+        if (board.gameEnded() || depth == 1)
             return score(board) * depth;
-        }
 
         if (ai) {
             int maxValue = Integer.MIN_VALUE;
@@ -51,6 +43,8 @@ public class StudentPlayer extends Player{
                 int value = minimax(nextBoard, depth - 1, alpha, beta, false);
                 if(depth == MAX_DEPTH && value > maxValue)
                     result = board.getValidSteps().get(p);
+                /*if(depth == MAX_DEPTH && value == maxValue && new Random().nextInt(2) == 1)
+                    result = board.getValidSteps().get(p);*/
                 maxValue = Math.max(maxValue, value);
                 alpha = Math.max(alpha, value);
                 if(beta <= alpha)
